@@ -1,0 +1,58 @@
+name: Install Mod
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  install-mod:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Find the mod JAR
+        id: jar
+        shell: bash
+        run: |
+          set -e
+          JAR_PATH=$(find . -type f -name '*.jar' | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "No .jar file was found in the repo."
+            exit 1
+          fi
+          echo "jar_path=$JAR_PATH" >> "$GITHUB_OUTPUT"
+          echo "jar_name=$(basename "$JAR_PATH")" >> "$GITHUB_OUTPUT"
+          echo "Found mod JAR: $JAR_PATH"
+
+      - name: Prepare install folder
+        shell: bash
+        run: |
+          mkdir -p install/mods
+          cp "${{ steps.jar.outputs.jar_path }}" install/mods/
+          ls -R install
+
+      - name: Upload mod as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-install
+          path: install/
+
+      - name: Publish release asset if this is a tag build
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: install/mods/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Done
+        shell: bash
+        run: |
+          echo "The mod is ready in install/mods/"
+          echo "Artifact: mod-install"
