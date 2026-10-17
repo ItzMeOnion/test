@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "better.modid.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "GamblingOverlayWindowMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
